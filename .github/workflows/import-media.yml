@@ -1,0 +1,28 @@
+name: Import verified public media
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/import-media.yml'
+permissions:
+  contents: write
+concurrency:
+  group: media-import
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy and verify originals
+        run: python3 scripts/import-media.py
+      - name: Save verified media
+        run: |
+          git config user.name "AkashicNET media migration"
+          git config user.email "media-migration@users.noreply.github.com"
+          git add assets verification.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Import verified public images video and audio"
+            git push origin HEAD:main
+          fi
